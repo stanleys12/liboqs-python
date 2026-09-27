@@ -1274,6 +1274,9 @@ class StatefulSignature(ct.Structure):
             self._store_cb = None
         if self._secret_key and self._owns_secret:
             native().OQS_SIG_STFL_SECRET_KEY_free(self._secret_key)
+        if self._sig:
+            native().OQS_SIG_STFL_free(self._sig)
+            self._sig = None
 
 
 native().OQS_SIG_STFL_new.restype = ct.POINTER(StatefulSignature)

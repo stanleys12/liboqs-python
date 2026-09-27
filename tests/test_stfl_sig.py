@@ -2,6 +2,7 @@ import logging
 import platform  # to learn the OS we're on
 import random
 from pathlib import Path
+from unittest import mock
 
 from typing import Tuple
 
@@ -156,6 +157,24 @@ def test_python_attributes() -> None:
             if sig.length_signature == 0:
                 msg = "Incorrect oqs.StatefulSignature.length_signature"
                 raise AssertionError(msg)
+
+
+def test_free() -> None:
+    lib = oqs.native()
+    real_free = lib.OQS_SIG_STFL_free
+    freed: list[object] = []
+
+    def recording_free(sig_ptr: object) -> None:
+        freed.append(sig_ptr)
+        real_free(sig_ptr)
+
+    sig = oqs.StatefulSignature(oqs.get_enabled_stateful_sig_mechanisms()[0])
+    with mock.patch.object(lib, "OQS_SIG_STFL_free", recording_free):
+        sig.free()
+        # The struct must not be freed a second time.
+        sig.free()
+
+    assert len(freed) == 1  # noqa: S101
 
 
 if __name__ == "__main__":
